@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Academic Record & Performance Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-blue-400">University Academic Record & Performance Platform</h1>
+        <div class="flex items-center gap-4">
+            <span id="userInfo" class="text-sm text-slate-300"></span>
+            <button id="logoutBtn" class="px-4 py-2 bg-red-600/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-white rounded text-sm transition">Logout</button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-slate-900/50 border-b border-slate-800 px-6 flex gap-4">
+        <button id="tabStudentsBtn" class="py-3 px-4 border-b-2 border-blue-500 font-medium text-blue-400 text-sm transition">Students Directory</button>
+        <button id="tabCoursesBtn" class="py-3 px-4 border-b-2 border-transparent font-medium text-slate-400 hover:text-slate-200 text-sm transition">Courses Catalog</button>
+        <button id="tabAnalyticsBtn" class="py-3 px-4 border-b-2 border-transparent font-medium text-slate-400 hover:text-slate-200 text-sm transition">Analytics & Performance</button>
+    </nav>
+
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+        <!-- STUDENTS VIEW SECTION -->
+        <div id="studentsSection" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-slate-400 text-sm font-medium">Total Students</h3>
+                    <p id="totalStudents" class="text-3xl font-bold mt-2 text-blue-400">0</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-slate-400 text-sm font-medium">Average CGPA</h3>
+                    <p id="avgCgpa" class="text-3xl font-bold mt-2 text-purple-400">0.0</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-slate-400 text-sm font-medium">Avg Attendance</h3>
+                    <p id="avgAttendance" class="text-3xl font-bold mt-2 text-emerald-400">0%</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-slate-400 text-sm font-medium">Pass Rate</h3>
+                    <p id="passRate" class="text-3xl font-bold mt-2 text-amber-400">100%</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <input type="text" id="searchInput" placeholder="Search by name, roll no..." class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:border-blue-500">
+                    <select id="filterDept" class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">All Departments</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                    </select>
+                    <select id="sortBy" class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                        <option value="roll_asc">Sort: Roll Number</option>
+                        <option value="cgpa_desc">Sort: Highest CGPA</option>
+                        <option value="name_asc">Sort: Name (A-Z)</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+                    <button id="importCsvBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition">Import CSV</button>
+                    <button id="exportCsvBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium transition">Export CSV</button>
+                    <button id="addStudentModalBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition">+ Add Student</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <th class="p-4">Roll Number</th>
+                                <th class="p-4">Name</th>
+                                <th class="p-4">Department</th>
+                                <th class="p-4">Semester</th>
+                                <th class="p-4">Attendance</th>
+                                <th class="p-4">CGPA</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody" class="divide-y divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- COURSES VIEW SECTION -->
+        <div id="coursesSection" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <input type="text" id="courseSearchInput" placeholder="Search by course code, title..." class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:border-blue-500">
+                    <select id="filterCourseDept" class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">All Departments</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                    </select>
+                    <select id="filterCourseSem" class="px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                        <option value="">All Semesters</option>
+                        <option value="1">Sem 1</option>
+                        <option value="2">Sem 2</option>
+                        <option value="3">Sem 3</option>
+                        <option value="4">Sem 4</option>
+                        <option value="5">Sem 5</option>
+                        <option value="6">Sem 6</option>
+                        <option value="7">Sem 7</option>
+                        <option value="8">Sem 8</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <button id="addCourseModalBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition">+ Add Course</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
+                                <th class="p-4">Course Code</th>
+                                <th class="p-4">Course Title</th>
+                                <th class="p-4">Credits</th>
+                                <th class="p-4">Department</th>
+                                <th class="p-4">Semester</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseTableBody" class="divide-y divide-slate-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS & PERFORMANCE VIEW SECTION -->
+        <div id="analyticsSection" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-sm font-medium text-slate-400 mb-4">Department Enrollment Metrics</h3>
+                    <canvas id="deptChart" height="140"></canvas>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-sm font-medium text-slate-400 mb-4">CGPA Tier Distribution</h3>
+                    <canvas id="cgpaChart" height="140"></canvas>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-sm font-medium text-slate-400 mb-4">Student Attendance Score Ranges</h3>
+                    <canvas id="attendanceChart" height="140"></canvas>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="text-sm font-medium text-slate-400 mb-4">Academic Standing Ratio (CGPA >= 6.0)</h3>
+                    <canvas id="standingChart" height="140"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add / Edit Student Modal -->
+    <div id="studentModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="studentModalTitle" class="text-xl font-bold text-blue-400">Add New Student</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <form id="studentForm" class="space-y-4">
+                <input type="hidden" id="editStudentId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Roll Number</label>
+                        <input type="text" id="rollNumber" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Full Name</label>
+                        <input type="text" id="fullName" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Email</label>
+                    <input type="email" id="studentEmail" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Department</label>
+                        <select id="studentDept" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Civil">Civil</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Semester</label>
+                        <input type="number" id="studentSem" min="1" max="8" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Attendance %</label>
+                        <input type="number" min="0" max="100" id="studentAttendance" value="85" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Enroll. Year</label>
+                        <input type="number" id="studentYear" value="2024" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium transition">Save Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add / Edit Course Modal -->
+    <div id="courseModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="courseModalTitle" class="text-xl font-bold text-blue-400">Add New Course</h3>
+                <button id="closeCourseModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <form id="courseForm" class="space-y-4">
+                <input type="hidden" id="editCourseId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Course Code</label>
+                        <input type="text" id="courseCode" required placeholder="CS101" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Credits</label>
+                        <input type="number" id="courseCredits" min="1" max="6" value="3" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Course Title</label>
+                    <input type="text" id="courseTitle" required placeholder="Data Structures" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Department</label>
+                        <select id="courseDept" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Civil">Civil</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-slate-400">Semester</label>
+                        <input type="number" id="courseSem" min="1" max="8" value="1" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium transition">Save Course</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transcript / Marks Modal -->
+    <div id="transcriptModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-3xl w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="transcriptTitle" class="text-xl font-bold text-blue-400">Student Transcript & Report Card</h3>
+                <div class="space-x-2">
+                    <button onclick="calculateStudentCgpa()" class="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-xs rounded text-white font-medium">Calculate CGPA</button>
+                    <button onclick="window.print()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded text-slate-200">Print Report</button>
+                    <button id="closeTranscriptModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+                </div>
+            </div>
+            <div id="transcriptContent" class="space-y-4 max-h-72 overflow-y-auto"></div>
+            <hr class="border-slate-800">
+            <h4 class="font-bold text-sm text-slate-300">Manage Marks & Grades</h4>
+            <form id="gradeForm" class="grid grid-cols-1 md:grid-cols-6 gap-2 items-end">
+                <input type="hidden" id="gradeStudentId">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Course</label>
+                    <select id="gradeCourseSelect" required class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Internal (20)</label>
+                    <input type="number" id="internalMarks" min="0" max="20" required class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Assignment (10)</label>
+                    <input type="number" id="assignmentMarks" min="0" max="10" required class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Practical (20)</label>
+                    <input type="number" id="practicalMarks" min="0" max="20" required class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-slate-400">Exam (50)</label>
+                    <input type="number" id="externalMarks" min="0" max="50" required class="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="md:col-span-6">
+                    <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium text-xs transition">Save & Calculate Grade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
